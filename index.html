@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MasterVocab">
+    <meta name="theme-color" content="#060814">
+    <title>MasterVocab - iOS Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #060814;
+            --ios-glass: rgba(22, 28, 48, 0.65);
+            --ios-glass-card: rgba(28, 35, 60, 0.75);
+            --ios-glass-sheet: rgba(16, 20, 36, 0.92);
+            --ios-border: rgba(255, 255, 255, 0.12);
+            --ios-border-strong: rgba(255, 255, 255, 0.22);
+            --text-main: #ffffff;
+            --text-sub: #98a2b3;
+            --accent-pink: #ff2d55;
+            --accent-cyan: #00f0ff;
+            --accent-emerald: #30d158;
+            --accent-amber: #ff9f0a;
+            --radius-squircle: 26px;
+            --radius-pill: 9999px;
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        * {
+            box-sizing: border-box; margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'SF Pro Text', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: max(16px, var(--safe-top)) 16px max(96px, calc(var(--safe-bottom) + 80px)) 16px;
+            display: flex; justify-content: center;
+            overflow-x: hidden; position: relative;
+        }
+
+        /* --- AURORA AMBIENT GLOW --- */
+        .aurora-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; pointer-events: none; overflow: hidden;
+        }
+        .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.45; }
+        .orb-1 { width: 380px; height: 380px; background: radial-gradient(circle, #ff2d55 0%, transparent 70%); top: -100px; left: -80px; }
+        .orb-2 { width: 440px; height: 440px; background: radial-gradient(circle, #007aff 0%, transparent 70%); bottom: 0; right: -100px; }
+
+        .app-container { max-width: 600px; width: 100%; position: relative; }
+
+        /* --- TOP HEADER --- */
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding: 4px 6px;
+        }
+        .brand-title {
+            font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px;
+            background: linear-gradient(180deg, #ffffff 40%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .ios-pill-badge {
+            background: rgba(255, 45, 85, 0.15); border: 0.5px solid rgba(255, 45, 85, 0.4);
+            color: #ff375f; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.8px; padding: 4px 12px; border-radius: var(--radius-pill);
+        }
+
+        /* --- VIEWS --- */
+        .view { display: none; }
+        .view.active { display: block; animation: iosSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes iosSlideUp { from { opacity: 0; transform: translateY(12px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        /* --- TACTILE BUTTONS --- */
+        .btn {
+            background: rgba(255, 255, 255, 0.08); color: #fff;
+            border: 0.5px solid var(--ios-border); padding: 14px 20px;
+            border-radius: var(--radius-pill); font-size: 0.92rem; font-weight: 700;
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            transition: transform 0.1s ease, background 0.2s ease, opacity 0.2s ease;
+            width: 100%;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff375f 0%, #ff2d55 100%);
+            border: none; box-shadow: 0 8px 24px -4px rgba(255, 45, 85, 0.4);
+        }
+        .btn-emerald {
+            background: linear-gradient(135deg, #30d158 0%, #28cd41 100%);
+            border: none; box-shadow: 0 8px 24px -4px rgba(48, 209, 88, 0.35);
+        }
+        .btn-amber {
+            background: linear-gradient(135deg, #ff9f0a 0%, #f57c00 100%);
+            border: none; box-shadow: 0 8px 24px -4px rgba(255, 159, 10, 0.35);
+        }
+        .btn-glass {
+            background: var(--ios-glass); backdrop-filter: blur(25px);
+            border: 0.5px solid var(--ios-border);
+        }
+        .btn:disabled { opacity: 0.35; pointer-events: none; }
+
+        /* --- CARDS & GROUPS --- */
+        .group-card {
+            background: var(--ios-glass); backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px);
+            border: 0.5px solid var(--ios-border); border-radius: var(--radius-squircle);
+            padding: 20px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px;
+            transition: transform 0.15s ease, border-color 0.2s ease;
+        }
+        .group-card.unlocked:active { transform: scale(0.985); }
+        .group-card.locked { opacity: 0.42; }
+        .group-meta { display: flex; justify-content: space-between; align-items: center; }
+        .group-tag { font-size: 0.72rem; font-weight: 800; color: var(--accent-pink); letter-spacing: 0.8px; text-transform: uppercase; }
+        .status-chip {
+            font-size: 0.68rem; font-weight: 800; padding: 3px 10px; border-radius: var(--radius-pill);
+            background: rgba(255, 255, 255, 0.08); border: 0.5px solid var(--ios-border); color: var(--text-sub);
+        }
+        .status-chip.completed { background: rgba(48, 209, 88, 0.16); color: #30d158; border-color: rgba(48, 209, 88, 0.35); }
+        .group-title { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.3px; color: #fff; }
+        .group-desc { font-size: 0.82rem; color: var(--text-sub); line-height: 1.4; }
+        .group-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+
+        /* --- BANCO CRITICO CARD --- */
+        .critical-ios-card {
+            background: linear-gradient(135deg, rgba(255, 159, 10, 0.15) 0%, rgba(22, 28, 48, 0.6) 100%);
+            backdrop-filter: blur(30px); border: 0.5px solid rgba(255, 159, 10, 0.35);
+            border-radius: var(--radius-squircle); padding: 20px; margin-bottom: 18px;
+        }
+
+        /* --- STUDY MODE (3D FLIP) --- */
+        .study-stage { perspective: 1000px; margin-bottom: 16px; cursor: pointer; }
+        .study-card-inner {
+            width: 100%; min-height: 270px; position: relative; transform-style: preserve-3d;
+            transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .study-card-inner.flipped { transform: rotateY(180deg); }
+        .card-surface {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 30px; background: var(--ios-glass-card); backdrop-filter: blur(40px);
+            border: 0.5px solid var(--ios-border-strong); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 24px; text-align: center;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+        }
+        .card-surface-back { transform: rotateY(180deg); border-color: rgba(255, 45, 85, 0.35); }
+        .card-cue-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; color: var(--text-sub); text-transform: uppercase; margin-bottom: 10px; }
+        .main-word-en { font-size: 2.7rem; font-weight: 800; letter-spacing: -0.8px; color: #fff; margin-bottom: 14px; }
+        .main-word-es { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; color: var(--accent-pink); margin-bottom: 14px; }
+
+        /* LINKING BREADCRUMB */
+        .linking-pill {
+            background: rgba(10, 13, 26, 0.7); backdrop-filter: blur(20px);
+            border: 0.5px solid var(--ios-border); border-radius: var(--radius-pill);
+            padding: 8px 14px; margin-bottom: 16px; display: flex; align-items: center;
+            justify-content: space-between; font-size: 0.76rem; color: var(--text-sub); gap: 8px;
+        }
+        .link-segment { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
+        .link-segment.active {
+            color: var(--accent-cyan); font-weight: 800; background: rgba(0, 240, 255, 0.12);
+            padding: 3px 10px; border-radius: var(--radius-pill); border: 0.5px solid rgba(0, 240, 255, 0.3);
+            max-width: 140px;
+        }
+
+        /* SPELLING INPUT */
+        .ios-input-strip {
+            background: var(--ios-glass); backdrop-filter: blur(25px);
+            border: 0.5px solid var(--ios-border); border-radius: 20px;
+            padding: 12px; margin-bottom: 16px; display: flex; gap: 8px;
+        }
+        .ios-input {
+            flex: 1; background: rgba(255, 255, 255, 0.05); border: 0.5px solid var(--ios-border);
+            border-radius: var(--radius-pill); padding: 12px 18px; color: #fff; font-size: 0.98rem;
+            font-weight: 600; outline: none; transition: border-color 0.2s;
+        }
+        .ios-input:focus { border-color: var(--accent-pink); }
+        .ios-input.correct { border-color: var(--accent-emerald); background: rgba(48, 209, 88, 0.15); }
+        .ios-input.wrong { border-color: var(--accent-pink); background: rgba(255, 45, 85, 0.15); }
+
+        /* --- EXAM MODE --- */
+        .exam-sheet {
+            background: var(--ios-glass-card); backdrop-filter: blur(40px);
+            border: 0.5px solid var(--ios-border); border-radius: 30px; padding: 24px;
+        }
+        .ios-progress-track {
+            height: 5px; width: 100%; background: rgba(255,255,255,0.08);
+            border-radius: var(--radius-pill); overflow: hidden; margin-bottom: 20px;
+        }
+        .ios-progress-fill { height: 100%; background: linear-gradient(90deg, #ff375f, #00f0ff); width: 0%; transition: width 0.3s; }
+        .exam-q-text { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.4px; text-align: center; margin-bottom: 22px; }
+        .exam-options-stack { display: flex; flex-direction: column; gap: 10px; }
+        .opt-item {
+            background: rgba(255, 255, 255, 0.04); border: 0.5px solid var(--ios-border);
+            border-radius: 18px; padding: 16px; font-size: 0.98rem; font-weight: 600; color: #fff;
+            text-align: left; cursor: pointer; transition: transform 0.1s ease, background 0.15s ease;
+        }
+        .opt-item:active { transform: scale(0.98); }
+        .opt-item.correct { background: rgba(48, 209, 88, 0.2); border-color: var(--accent-emerald); color: #30d158; }
+        .opt-item.wrong { background: rgba(255, 45, 85, 0.2); border-color: var(--accent-pink); color: #ff375f; }
+
+        /* --- BOTTOM TAB BAR (IOS NATIVE STYLE) --- */
+        .tab-bar {
+            position: fixed; bottom: max(12px, var(--safe-bottom)); left: 50%;
+            transform: translateX(-50%); width: calc(100% - 32px); max-width: 480px;
+            background: var(--ios-glass-sheet); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border: 0.5px solid var(--ios-border-strong); border-radius: var(--radius-pill);
+            display: flex; justify-content: space-around; align-items: center; padding: 8px 12px;
+            box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.65); z-index: 100;
+        }
+        .tab-item {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            color: var(--text-sub); font-size: 0.68rem; font-weight: 700; cursor: pointer;
+            padding: 6px 14px; border-radius: var(--radius-pill); transition: color 0.15s ease;
+            position: relative;
+        }
+        .tab-item.active { color: #fff; }
+        .tab-item svg { width: 22px; height: 22px; fill: currentColor; }
+        .tab-badge {
+            position: absolute; top: 2px; right: 8px; background: var(--accent-amber);
+            color: #000; font-size: 0.6rem; font-weight: 900; padding: 1px 5px;
+            border-radius: var(--radius-pill); min-width: 15px; text-align: center;
+        }
+
+        /* --- STATS SHEET MODAL --- */
+        .stats-sheet {
+            background: var(--ios-glass-card); backdrop-filter: blur(40px);
+            border: 0.5px solid var(--ios-border); border-radius: 30px; padding: 24px;
+        }
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.04); border: 0.5px solid var(--ios-border);
+            border-radius: 20px; padding: 16px;
+        }
+
+        .icon { width: 18px; height: 18px; fill: currentColor; }
+    </style>
+</head>
+<body>
+
+<div class="aurora-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+</div>
+
+<div class="app-container">
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+        <div>
+            <div class="brand-title">MasterVocab</div>
+            <div style="font-size: 0.74rem; color: var(--text-sub); font-weight: 600;">10 Cadenas Linking B1/B2</div>
+        </div>
+        <div class="ios-pill-badge" id="global-pct-badge">0%</div>
+    </div>
+
+    <!-- VIEW 1: MODULOS (HOME) -->
+    <div id="view-dashboard" class="view active">
+        <!-- CRITICAL PROMO CHIP -->
+        <div class="critical-ios-card" id="critical-card-banner">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 0.72rem; font-weight: 800; color: var(--accent-amber); text-transform: uppercase;">Banco Crítico</span>
+                <span style="font-size: 0.75rem; font-weight: 800; color: #fff;" id="crit-count-pill">0 pendientes</span>
+            </div>
+            <div style="font-size: 0.88rem; font-weight: 700; margin-bottom: 12px;">Refuerzo de palabras con dificultad</div>
+            <button class="btn btn-amber" id="btn-start-crit" onclick="startCriticalStudy()">Repasar Banco Crítico</button>
+        </div>
+
+        <div id="groups-container"></div>
+    </div>
+
+    <!-- VIEW 2: MODO ESTUDIO (3D FLIP + LINKING) -->
+    <div id="view-study" class="view">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <button class="btn btn-glass" style="width: auto; padding: 8px 16px; font-size: 0.82rem;" onclick="switchTab('dashboard')">
+                ← Volver
+            </button>
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-sub);">
+                Restantes: <span id="study-remaining-badge" style="color: #fff;">0</span>
+            </div>
+        </div>
+
+        <!-- BREADCRUMB LINKING SEQUENCE -->
+        <div class="linking-pill">
+            <span class="link-segment" id="crumb-prev">Inicio</span>
+            <span style="opacity: 0.4;">➔</span>
+            <span class="link-segment active" id="crumb-curr">Actual</span>
+            <span style="opacity: 0.4;">➔</span>
+            <span class="link-segment" id="crumb-next">Siguiente</span>
+        </div>
+
+        <!-- 3D FLIP CARD -->
+        <div class="study-stage" onclick="toggleCardFlip()">
+            <div class="study-card-inner" id="study-card-inner">
+                <div class="card-surface">
+                    <div class="card-cue-label">Inglés - Toca para voltear</div>
+                    <div class="main-word-en" id="word-display-en">Word</div>
+                    <button class="btn btn-primary" style="width: auto; padding: 10px 18px;" onclick="event.stopPropagation(); playCurrentAudio();">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                        Pronunciación
+                    </button>
+                </div>
+                <div class="card-surface card-surface-back">
+                    <div class="card-cue-label">Español</div>
+                    <div class="main-word-es" id="word-display-es">Traducción</div>
+                    <button class="btn btn-primary" style="width: auto; padding: 10px 18px;" onclick="event.stopPropagation(); playCurrentAudio();">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                        Repetir Audio
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MINI RETO DE ESCRITURA -->
+        <div class="ios-input-strip">
+            <input type="text" id="spell-input" class="ios-input" placeholder="Escribe en inglés para comprobar..." autocomplete="off" autocapitalize="none" onkeyup="handleSpellInput(event)">
+            <button class="btn btn-glass" style="width: auto;" onclick="checkSpellingNow()">Validar</button>
+        </div>
+
+        <!-- ACTIONS -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button class="btn btn-glass" style="border-color: rgba(255,45,85,0.4); color: #ff375f;" onclick="markHardWord()">
+                Aún me cuesta
+            </button>
+            <button class="btn btn-emerald" onclick="markMasteredWord()">
+                Dominada
+            </button>
+        </div>
+    </div>
+
+    <!-- VIEW 3: EXAMEN BIDIRECCIONAL -->
+    <div id="view-exam" class="view">
+        <div class="exam-sheet">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <button class="btn btn-glass" style="width: auto; padding: 6px 14px; font-size: 0.8rem;" onclick="switchTab('dashboard')">Cancelar</button>
+                <span id="exam-counter-text" style="font-size: 0.82rem; font-weight: 700; color: var(--text-sub);">1 de 15</span>
+            </div>
+            <div class="ios-progress-track"><div class="ios-progress-fill" id="exam-bar-fill"></div></div>
+            <div style="text-align: center; margin-bottom: 12px;">
+                <span class="ios-pill-badge" id="exam-dir-badge">Dirección</span>
+            </div>
+            <div class="exam-q-text" id="exam-q-stem">Pregunta...</div>
+            <div class="exam-options-stack" id="exam-opt-stack"></div>
+        </div>
+    </div>
+
+    <!-- VIEW 4: RESULTADOS -->
+    <div id="view-results" class="view">
+        <div class="exam-sheet" style="text-align: center; padding: 36px 20px;">
+            <h2 id="res-heading" style="font-size: 1.8rem; margin-bottom: 8px;">Resultado</h2>
+            <div id="res-score-badge" style="font-size: 3rem; font-weight: 900; color: #fff; margin: 16px 0;">0%</div>
+            <p id="res-summary-text" style="color: var(--text-sub); font-size: 0.95rem; margin-bottom: 24px; line-height: 1.4;"></p>
+            <button class="btn btn-primary" onclick="switchTab('dashboard')">Volver al Inicio</button>
+        </div>
+    </div>
+
+    <!-- VIEW 5: STATS PANEL -->
+    <div id="view-stats" class="view">
+        <div class="stats-sheet">
+            <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 18px;">Métricas de Aprendizaje</h3>
+            <div class="stat-row">
+                <div class="stat-box">
+                    <div style="font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Dominadas</div>
+                    <div style="font-size: 1.8rem; font-weight: 800;" id="stat-m-total">0</div>
+                    <div style="font-size: 0.74rem; color: var(--text-sub);">de 1,000 palabras</div>
+                </div>
+                <div class="stat-box">
+                    <div style="font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Al Primer Intento</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent-cyan);" id="stat-m-first">0</div>
+                    <div style="font-size: 0.74rem; color: var(--text-sub);">conocidas directo</div>
+                </div>
+                <div class="stat-box">
+                    <div style="font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Repasadas</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent-pink);" id="stat-m-rev">0</div>
+                    <div style="font-size: 0.74rem; color: var(--text-sub);">en repetición</div>
+                </div>
+                <div class="stat-box">
+                    <div style="font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Banco Crítico</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent-amber);" id="stat-m-crit">0</div>
+                    <div style="font-size: 0.74rem; color: var(--text-sub);">requieren refuerzo</div>
+                </div>
+            </div>
+            <button class="btn btn-glass" style="color: var(--accent-pink); font-size: 0.85rem;" onclick="resetAllProgress()">
+                Restablecer Métricas y Progreso
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- BOTTOM TAB BAR (IOS STYLE) -->
+<nav class="tab-bar">
+    <div class="tab-item active" id="tab-btn-dashboard" onclick="switchTab('dashboard')">
+        <svg viewBox="0 0 24 24"><path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0-18v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z"/></svg>
+        <span>Módulos</span>
+    </div>
+    <div class="tab-item" id="tab-btn-crit" onclick="startCriticalStudy()">
+        <svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm1 14h-2v-2h2v2zm0-4h-2V8h2v4z"/></svg>
+        <span>Refuerzo</span>
+        <div class="tab-badge" id="tab-crit-badge" style="display: none;">0</div>
+    </div>
+    <div class="tab-item" id="tab-btn-stats" onclick="switchTab('stats')">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+        <span>Progreso</span>
+    </div>
+</nav>
+
+<script>
+    // ==========================================
+    // 1. DICCIONARIO BASE: 10 CADENAS LINKING
+    // ==========================================
+    const groupDefinitions = [
+        {
+            title: "Rutina, Hogar y Alimentos",
+            desc: "Cadena matutina: Despertar, aseo, vestimenta, cocina y comidas.",
+            words: `alarm clock|despertador
+get up early|madrugar
+take a shower|ducharse
+bathtub|bañera
+soap|jabón
+towel|toalla
+toothbrush|cepillo de dientes
+toothpaste|pasta de dientes
+brush|cepillo
+shave|afeitarse
+get dressed|vestirse
+pajamas|pijama
+uniform|uniforme
+blouse|blusa
+cardigan|cárdigan
+vest|chaleco
+scarf|bufanda
+earring|arete
+necklace|collar
+bracelet|pulsera
+shoe store|zapatería
+sandal|sandalia
+swimsuit|traje de baño
+try on|probarse
+put on|ponerse
+dress up|ponerse elegante
+fashion|moda
+fashionable|de moda
+haircut|corte de pelo
+perfume|perfume
+dresser|tocador
+pillow|almohada
+dining room|comedor
+cupboard|alacena
+plate|plato
+bowl|bol
+cup|taza
+dish|plato
+dishwasher|lavavajillas
+oven|horno
+grill|parrilla
+bake|hornear
+fry|freír
+melt|derretirse
+chop|cortar
+pour|verter
+eat breakfast|desayunar
+cook dinner|cocinar la cena
+eat out|comer fuera
+have lunch|almorzar
+pancake|panqueque
+biscuit|panecillo
+bakery|panadería
+wheat|trigo
+noodle|fideo
+dairy|lácteos
+yogurt|yogurt
+cream|crema
+garlic|ajo
+cucumber|pepino
+spinach|espinaca
+green bean|frijol verde
+mango|mango
+grapefruit|toronja
+pear|pera
+olive|aceituna
+steak|bistec
+lamb|cordero
+tuna|atún
+salmon|salmón
+sausage|salchicha
+french fry|papa frita
+fast food|comida rápida
+sweet|dulce
+salty|salado
+sour|agrio
+tasty|sabroso
+raw|crudo
+grilled|a la parrilla
+fried|frito
+do the laundry|lavar la ropa
+laundromat|lavandería automática
+laundry|ropa sucia
+iron|planchar
+clean the house|limpiar la casa
+clean up|limpiar
+wash|lavar
+trash|basura
+dump|vertedero
+put away|guardar
+chore|quehacer
+fireplace|chimenea
+carpet|alfombra
+furniture / block|bloque
+repair|reparar
+utility|utilidad
+material|material
+cotton|algodón
+wool|lana
+silk|seda`
+        },
+        {
+            title: "Cuerpo, Salud y Medicina",
+            desc: "Cadena biológica: Anatomía, sensaciones, síntomas y tratamientos.",
+            words: `person|persona
+female|hembra
+male|macho
+height|estatura
+slim|delgado
+overweight|con sobrepeso
+mouth|boca
+lip|labio
+tooth|diente
+chin|mentón
+beard|barba
+mustache|bigote
+eyebrow|ceja
+long hair|pelo largo
+short hair|pelo corto
+straight hair|pelo liso
+curly|rizado
+brown hair|cabello castaño
+bald|calvo
+throat|garganta
+shoulder|hombro
+chest|pecho
+heart|corazón
+elbow|codo
+wrist|muñeca
+hip|cadera
+ankle|tobillo
+physical|físico
+energy|energía
+sweat|sudar
+breathe|respirar
+sneeze|estornudo
+tear|lágrima
+thirsty|sediento
+weak|débil
+tired / exhausted|agotado
+dizzy|mareado
+illness|enfermedad
+backache|dolor de espalda
+earache|dolor de oídos
+swollen|hinchado
+stiff|duro
+vomit|vomitar
+allergy|alergia
+symptom|síntoma
+scratch|arañazo
+sprain|torcerse
+damage|dañar
+medical|médico
+counselor|consejero
+psychologist|psicólogo
+pharmacy|farmacia
+prescription|receta
+medication|medicamento
+painkiller|analgésico
+vitamin|vitamina
+protein|proteína
+nutrition|nutrición
+shot|inyección
+remedy|remedio
+treatment|tratamiento
+cure / process|proceso
+recover / get over|recuperarse de
+fitness|forma física
+jog|hacer jogging
+joggling|trotar
+lifestyle|estilo de vida
+unhealthy|poco saludable
+smoke|fumar
+pollution|contaminación
+depression|depresión
+depressed|deprimido
+anxious|ansioso
+anxiety|ansiedad
+stress|estrés
+stressed|estresado
+mental / calm / quiet|totalmente
+sense|sentido
+touch|tocar
+smell|olor
+view|vista
+sound|sonido
+alive / alive / dead / born|nacido
+youth|juventud
+teenager|adolescente
+elderly|mayor
+mature|maduro
+difference|diferencia
+species|especie
+biology|biología
+scientist|científico
+investigate|investigar
+discovery|descubrimiento
+evidence|pruebas
+proof|prueba
+scale|escala
+measure|medir`
+        },
+        {
+            title: "Emociones, Carácter y Familia",
+            desc: "Cadena afectiva: Sentimientos, valores y relaciones personales.",
+            words: `emotion|emoción
+happiness|felicidad
+sadness|tristeza
+miserable|miserable
+unhappy|infeliz
+depressing|deprimente
+frightened|asustado
+frightening|espantoso
+scary|de miedo
+terrified|aterrorizado
+horror|horror
+surprise|sorpresa
+surprised|sorprendido
+amaze|asombrar
+thrilled|entusiasmado
+enthusiastic|entusiasmado
+passionate|apasionado
+moving|conmovedor
+excitement|emoción
+personality|personalidad
+attitude|actitud
+hardworking|trabajador
+intelligent|inteligente
+talented|talentoso
+creative|creativo
+sociable|sociable
+talkative|hablador
+outgoing|extrovertido
+confident|seguro de sí mismo
+ambitious|ambicioso
+competitive|competitivo
+sensible|sensato
+sensitive|sensible
+mature / flexible|flexible
+patient / impatient|impaciente
+careless|descuidado
+selfish|egoísta
+aggressive|agresivo
+annoyed|molesto
+annoy|molestar
+bother|molestar
+irritable|irritable
+jealous|celoso
+confused|confundido
+awkward|torpe
+weird|raro
+odd|extraño
+bizarre|extraño
+silly|tonto
+ridiculous|ridículo
+disgusting|asqueroso
+horrible|horrible
+charming|encantador
+good-looking|guapo
+honest / dishonest|deshonesto
+polite / impolite|descortés
+respect|respetar
+trust|confiar en
+belief|creencia
+forgive|perdonar
+regret|arrepentirse
+hug|abrazo
+kiss / love / girlfriend|novia
+fiancé|prometido
+engagement|compromiso
+wedding / marriage / marry / divorce|divorcio
+get divorced|divorciarse
+break up|separarse
+relative|pariente
+brother-in-law|cuñado
+sister-in-law|cuñada
+grandson|nieto
+granddaughter|nieta
+kid|niño
+babysit|cuidar niños
+get along|llevarse bien
+keep in touch|mantenerse en contacto
+bring up|sacar a relucir
+get together|juntar
+congratulations|felicidades
+Valentine's Day|Día de San Valentín
+Thanksgiving|Día de Acción de Gracias
+Halloween|Halloween
+celebrate|celebrar
+celebration|celebración
+festival|festival
+party / share|compartir
+wish|deseo
+peace|paz`
+        },
+        {
+            title: "Trabajo, Negocios y Economía",
+            desc: "Cadena profesional: Empleo, oficina, finanzas y comercio.",
+            words: `employment|empleo
+unemployed|desempleado
+get a job|conseguir trabajo
+work experience|experiencia laboral
+application|solicitud
+interview / appointment|cita
+hire / employer|empleador
+staff|personal
+colleague|colega
+position|posición
+principal|director
+director|director
+boss / landlord|dueño
+owner|dueño
+leadership|liderazgo
+full-time|a tiempo completo
+part-time / task|tarea
+project|proyecto
+development|desarrollo
+training|entrenamiento
+achievement|logro
+succeed|tener éxito
+profit|ganancias
+bonus|plus
+payment|pago
+bill|cuenta
+receipt|recibo
+debt|deuda
+mortgage|hipoteca
+financial|financiero
+economy|economía
+industry|industria
+manufacture|fabricar
+factory|fábrica
+product|producto
+brand|marca
+quality|calidad
+valuable|valioso
+affordable|económico
+cost / discount|descuento
+bargain|ganga
+refund|reembolso
+purchase|comprar
+buy|comprar
+sale|venta
+sales|ventas
+trade|comercio
+export|exportar
+import|importación
+importation / contract|contrato
+lease|contrato de arrendamiento
+agreement|acuerdo
+negotiate / terms / term|término
+marketing|marketing
+advertisement|anuncio
+ad|anuncio
+launch|lanzar
+sponsor|patrocinador
+campaign|campaña
+invest|invertir
+investment|inversión
+wealthy|rico
+rich|rico
+poor|pobre
+poverty|pobreza
+fortune|fortuna
+dollar|dólar
+pound|libra
+loss|pérdida
+gain|ganar
+earn|ganar
+waste|malgastar
+afford|permitirse
+limit|límite
+advance|avance
+capacity|capacidad
+efficient|eficiente
+effective|eficaz
+practical|práctico
+organize|organizar
+manage / handle|manejar
+control|control
+deliver|entregar
+package|paquete
+item|artículo
+storage|almacenamiento
+briefcase|maletín`
+        },
+        {
+            title: "Ciudad, Edificios y Vida Urbana",
+            desc: "Cadena urbana: Hogar, calles, construcciones y servicios.",
+            words: `town|pueblo
+village|pueblo
+hometown|ciudad natal
+suburb|barrio periférico
+community|comunidad
+population|población
+apartment building|edificio de apartamentos
+basement|sótano
+balcony|balcón
+yard|patio
+garden|jardín
+wood|madera
+bridge|puente
+corner|esquina
+lane|carril
+cross|cruzar
+directions|indicaciones
+location|ubicación
+parking lot|estacionamiento
+parking|estacionamiento
+gas station|gasolinera
+bus stop|parada de autobús
+train station|estación de tren
+station|estación
+shopping mall|centro comercial
+mall|centro comercial
+market / cafeteria|cafetería
+restroom|baño
+counter|mostrador
+elevator|ascensor
+cinema|cine
+movie theater|cine
+theater|teatro
+stadium|estadio
+playground|patio de recreo
+swimming pool|piscina
+court|corte
+police station|estación de policía
+jail / arrest|detener
+murder|asesinato
+crime / witness|testigo
+judge|juez
+trial|juicio
+law|ley
+illegal|ilegal
+danger|peligro
+risk|riesgo
+emergency|emergencia
+warning|aviso
+warn|advertir
+threaten|amenazar
+poison|veneno
+strike|huelga
+crowd|multitud
+homeless|sin hogar
+gang|banda
+electrician|electricista
+carpenter|carpintero
+hairdresser|peluquero
+waitress|camarera
+server|camarero
+driver license|licencia de conducir
+driving|manejo
+speed|velocidad
+slow down|reducir la velocidad
+truck|camión
+motorbike|moto
+seat belt|cinturón de seguridad
+windshield|parabrisas
+horn|claxon
+helmet|casco
+rush|prisa
+delay|retraso
+ferry|transbordador
+plane|avión
+ship|barco
+journey|viajar
+departure|salida
+arrive|llegar
+get around|moverse
+get lost|perderse
+lost|perdido`
+        },
+        {
+            title: "Viajes, Turismo y Países",
+            desc: "Cadena turística: Equipaje, hoteles, destinos y culturas.",
+            words: `go to|ir a
+go to work|ir al trabajo
+go to school|ir a la escuela
+go to the beach|ir a la playa
+go swimming|ir a nadar
+go dancing|ir a bailar
+go on|seguir
+going|partida
+get on|subir
+get off|bajarse
+get into|entrar a
+get out|salir
+enter|entrar en
+pack|empacar
+suitcase|maleta
+luggage|equipaje
+postcard|tarjeta postal
+stamp|sello
+tour|recorrido
+tourist|turista
+explore|explorar
+adventure|aventura
+foreign|extranjero
+abroad|en el extranjero
+international|internacional
+culture|cultura
+bilingual|bilingüe
+tradition|tradición
+traditional|tradicional
+modern|moderno
+ancient / old-fashioned|pasado de moda
+hotel / service / serve|servir
+reception / hall|vestíbulo
+lock|cerradura
+room / spare|repuesto
+view|vista
+far|lejos
+near / narrow|estrecho
+flat|plano
+huge|enorme
+enormous|enorme
+tiny|diminuto
+medium|mediano
+whole|entero
+half|mitad
+part|parte
+United States|Estados Unidos
+England|Inglaterra
+Germany|Alemania
+Canada|Canadá
+India|India
+Argentina|Argentina
+American|americano
+British|británico
+German|alemán
+Russian|ruso
+Portuguese|portugués
+Arabic|árabe
+Korean|coreano
+Brazilian|brasileño
+Egyptian|egipcio
+north|norte
+south|sur
+East|Este
+west|oeste
+ocean|océano
+island|isla
+cliff|acantilado
+hill|colina
+forest|bosque
+log|tronco
+trunk|tronco
+surface|superficie
+ground / field|campo
+countryside|campo
+picnic|picnic
+barbecue|parrillada
+relax / relaxed|relajado
+rest|descansar`
+        },
+        {
+            title: "Naturaleza, Clima y Medio Ambiente",
+            desc: "Cadena ecológica: Paisajes, flora, fauna y meteorología.",
+            words: `nature / natural / flower|flor
+rose|rosa
+tree / plant / rubber|goma
+plastic|plástico
+grain|grano
+air|aire
+wind|viento
+windy|ventoso
+cloud / cloudy|nublado
+foggy|neblinoso
+rain / rainy|lluvioso
+humid|húmedo
+mild|suave
+freeze / frozen|congelado
+melt / steam|vapor
+weather / global warming|calentamiento global
+pollution|contaminación
+drought|sequía
+tornado|tornado
+hurricane|huracán
+lightning|relámpago
+volcano|volcán
+destroy|destruir
+damage|dañar
+waste|malgastar
+balance|equilibrio
+protect|proteger
+sunscreen|protector solar
+bright|brillante
+dark / fire / fireworks|fuegos artificiales
+smoke|fumar
+drain|vaciar
+overflow / spill|derramar
+drop|dejar caer
+animal / pet|mascota
+dog / bark|ladrar
+fur|piel
+bear|oso
+rabbit|conejo
+sheep|oveja
+bird|pájaro
+snake|serpiente
+zebra|cebra
+hunting|caza
+wild / danger / risk|riesgo
+safe / survive / alive / weird|raro
+fresh|fresco
+sour|agrio
+raw|crudo
+pure / clean / clear|claro
+space|espacio
+world / earth / ground / dirt / mud / wet|mojado
+cover|cubrir
+fill / empty|vacío
+full|lleno
+remain|permanecer
+change|cambiar
+disappear / survive / exist / consist|consistir
+contain|contener
+matter / thing|cosa`
+        },
+        {
+            title: "Ocio, Deportes, Arte y Espectáculos",
+            desc: "Cadena recreativa: Actividad física, música y cine.",
+            words: `hobby|pasatiempo
+spend time|pasar tiempo
+play sports|practicar deporte
+play soccer|jugar fútbol
+play tennis|jugar al tenis
+tennis|tenis
+golf|golf
+ski|esquiar
+skiing|esquí
+skate|patinar
+swim / swimming pool|piscina
+coach|entrenador
+referee|árbitro
+player|jugador
+team|equipo
+compete|competir
+competitive|competitivo
+competition / beat|batir
+score|puntuación
+win / victory / lose / loss|pérdida
+athletic|atlético
+kick|patear
+throw|tirar
+catch|atrapar
+climb|escalar
+lift|levantar
+push|empujar
+track|pista
+gymnastics|gimnasia
+art / artist|artista
+painter|pintor
+drawing|dibujo
+draw|dibujar
+photography|fotografía
+photographer|fotógrafo
+take a photo|tomar una foto
+photo|foto
+camera / picture / image / video|video
+music / musical|musical
+classical music|música clásica
+jazz|jazz
+tango|tango
+dance / dancer|bailarín
+play the guitar|tocar la guitarra
+listen to the radio|escuchar la radio
+sound|sonido
+rhythm|ritmo
+whistle|silbar
+poetry|poesía
+literature|literatura
+writer|escritor
+read / reading|lectura
+story / tale / cartoon|dibujos animados
+documentary|documental
+series|serie
+watch a movie|ver una película
+cinema|cine
+theater|teatro
+actor / actress|actriz
+act|actuar
+stage / audience|público
+entertainment / entertaining|divertido
+comedy|comedia
+hilarious|hilarante
+horror|horror
+costume|disfraz
+disguise / talent|talento
+amuse / fun / joy / happiness|felicidad`
+        },
+        {
+            title: "Educación, Ciencia y Tecnología",
+            desc: "Cadena del conocimiento: Estudios, software y redes.",
+            words: `kindergarten|jardín de infancia
+middle school|escuela secundaria
+university|universidad
+degree|grado
+semester|semestre
+lesson|lección
+exam|examen
+math|mates
+biology|biología
+chemistry|química
+geography|geografía
+politics|política
+history / test / do homework|hacer tarea
+chalkboard|pizarra
+eraser|borrador
+keyboard|teclado
+screen|pantalla
+monitor|monitor
+computer lab|sala de computación
+information technology|informática
+software|software
+technology / smartphone|teléfono inteligente
+mobile|móvil
+phone|teléfono
+telephone|teléfono
+phone call|llamada
+hang up|colgar
+social networking|redes sociales
+website|sitio web
+link|enlace
+upload|subir
+download|descargar
+post|publicar
+text|texto
+copy|copia
+print|imprimir
+file|archivo
+record|grabar
+video game|videojuego
+electronics|electrónica
+switch|cambiar
+robot|robot
+invent|inventar
+invention|invento
+innovative|innovador
+scientific / research / survey|encuesta
+investigate|investigar
+experiment / laboratory / discovery|descubrimiento
+data / analysis / result|resultado
+solution|solución
+solve|resolver
+process|proceso
+advance|avanzar
+advanced|avanzado
+complex|complejo
+simple|sencillo
+master|dominar
+wisdom|sabiduría
+understand / understanding|entendimiento
+know / knowledge / learn / study / practice / test / proof|prueba
+evidence|pruebas
+detail|detalle
+highlight|resaltar`
+        },
+        {
+            title: "Pensamiento, Comunicación y Acción",
+            desc: "Cadena de razonamiento: Decisiones y phrasal verbs B2.",
+            words: `idea|idea
+think / thought-provoking|estimulante
+wonder|preguntarse
+imagine|imaginar
+realize|darse cuenta de
+admit|admitir
+pretend|fingir
+deny|negar
+doubt / guess|adivinar
+consider|considerar
+concentrate|concentrarse
+decide|decidir
+choice|opción
+intend|tener la intención de
+willing|dispuesto
+prefer|preferir
+suggest|sugerir
+suggestion|sugerencia
+recommend|recomendar
+advise|aconsejar
+persuade|convencer
+argue|discutir
+argument|discusión
+discuss|discutir
+conversation|conversación
+express|expresar
+communicate|comunicar
+communication|comunicación
+agree|estar de acuerdo
+disagree|no estar de acuerdo
+agreement|acuerdo
+compromise / accept|aceptar
+refuse / ban|prohibir
+permit|permitir
+allow|permitir
+require|requerir
+required|obligatorio
+have to|tener que
+be able to|poder
+able|capaz
+cannot|no poder
+demand|exigir
+cause|causar
+affect|afectar
+result|resultado
+consequence / furthermore|además
+unfortunately|desafortunadamente
+sadly|desgraciadamente
+apparently|al parecer
+probably|probablemente
+perhaps|tal vez
+actually|en realidad
+totally|totalmente
+absolutely|absolutamente
+extremely|sumamente
+incredibly|increíblemente
+nearly|casi
+quite|totalmente
+less|menos
+fewer|menos
+much|mucho
+amount|cantidad
+equal|igual
+equality|igualdad
+compare|comparar
+contrast|contraste
+diverse|diverso
+alternative|alternativo
+different / difference|diferencia
+alike|parecido
+look like|parecerse a
+seem|parecer
+look at|mirar
+look for|buscar
+look up|buscar
+look forward to|tener muchas ganas de
+stand up|ponerse de pie
+stand out|sobresalir
+break into|entrar en
+break up|separarse
+cut off|cortar
+fill in|rellenar
+deal with|lidiar con
+take care of|encargarse de
+continue|continuar`
+        }
+    ];
+
+    // Parser seguro
+    const groups = groupDefinitions.map(g => {
+        return g.words
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.includes('|'))
+            .map(line => {
+                const [en, es] = line.split('|');
+                return { en: en.trim(), es: es.trim() };
+            });
+    });
+
+    // ==========================================
+    // 2. PERSISTENCIA Y ESTADISTICAS
+    // ==========================================
+    let wordStats = JSON.parse(localStorage.getItem('vocabWordStats')) || {};
+    let criticalWords = JSON.parse(localStorage.getItem('vocabCriticalWords')) || [];
+    let progress = JSON.parse(localStorage.getItem('englishProgress')) || { unlocked: 1 };
+
+    function addCriticalWord(wordObj) {
+        if (!criticalWords.some(w => w.en.toLowerCase() === wordObj.en.toLowerCase())) {
+            criticalWords.push({ en: wordObj.en, es: wordObj.es });
+            localStorage.setItem('vocabCriticalWords', JSON.stringify(criticalWords));
+            updateMetricsUI();
+        }
+    }
+
+    function removeCriticalWord(enWord) {
+        criticalWords = criticalWords.filter(w => w.en.toLowerCase() !== enWord.toLowerCase());
+        localStorage.setItem('vocabCriticalWords', JSON.stringify(criticalWords));
+        updateMetricsUI();
+    }
+
+    function updateMetricsUI() {
+        let totalLearned = 0;
+        let knownFirst = 0;
+        let reviewedCount = 0;
+
+        Object.values(wordStats).forEach(s => {
+            if (s.mastered) totalLearned++;
+            if (s.knownDirectly) knownFirst++;
+            if (s.reviewed) reviewedCount++;
+        });
+
+        const pct = ((totalLearned / 1000) * 100).toFixed(0);
+        document.getElementById('global-pct-badge').innerText = `${pct}% Dominado`;
+
+        // Métricas View
+        document.getElementById('stat-m-total').innerText = totalLearned;
+        document.getElementById('stat-m-first').innerText = knownFirst;
+        document.getElementById('stat-m-rev').innerText = reviewedCount;
+        document.getElementById('stat-m-crit').innerText = criticalWords.length;
+
+        // Card Refuerzo en Dashboard
+        document.getElementById('crit-count-pill').innerText = `${criticalWords.length} pendientes`;
+        document.getElementById('btn-start-crit').disabled = (criticalWords.length === 0);
+
+        // Badge en Bottom Tab Bar
+        const tabCritBadge = document.getElementById('tab-crit-badge');
+        if (criticalWords.length > 0) {
+            tabCritBadge.style.display = 'block';
+            tabCritBadge.innerText = criticalWords.length;
+        } else {
+            tabCritBadge.style.display = 'none';
+        }
+    }
+
+    function resetAllProgress() {
+        if (confirm("¿Deseas reiniciar todas las métricas, banco crítico y progreso a cero?")) {
+            localStorage.removeItem('vocabWordStats');
+            localStorage.removeItem('vocabCriticalWords');
+            localStorage.removeItem('englishProgress');
+            wordStats = {};
+            criticalWords = [];
+            progress = { unlocked: 1 };
+            updateMetricsUI();
+            renderDashboardCards();
+            switchTab('dashboard');
+        }
+    }
+
+    // ==========================================
+    // 3. NAVEGACION TAB BAR Y VISTAS
+    // ==========================================
+    const views = {
+        dashboard: document.getElementById('view-dashboard'),
+        study: document.getElementById('view-study'),
+        exam: document.getElementById('view-exam'),
+        results: document.getElementById('view-results'),
+        stats: document.getElementById('view-stats')
+    };
+
+    function switchTab(viewKey) {
+        Object.values(views).forEach(v => v.classList.remove('active'));
+        if (views[viewKey]) views[viewKey].classList.add('active');
+
+        // Actualizar tabs activas
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        if (viewKey === 'dashboard') document.getElementById('tab-btn-dashboard').classList.add('active');
+        if (viewKey === 'stats') document.getElementById('tab-btn-stats').classList.add('active');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        updateMetricsUI();
+    }
+
+    function renderDashboardCards() {
+        const container = document.getElementById('groups-container');
+        container.innerHTML = '';
+
+        for (let i = 0; i < 10; i++) {
+            const isUnlocked = (i + 1) <= progress.unlocked;
+            const isCompleted = (i + 1) < progress.unlocked;
+            const def = groupDefinitions[i];
+
+            const card = document.createElement('div');
+            card.className = `group-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+
+            card.innerHTML = `
+                <div class="group-meta">
+                    <span class="group-tag">Cadena ${i + 1}</span>
+                    <span class="status-chip ${isCompleted ? 'completed' : ''}">
+                        ${isCompleted ? 'Completada' : (isUnlocked ? 'En Curso' : 'Bloqueada')}
+                    </span>
+                </div>
+                <div class="group-title">${def.title}</div>
+                <div class="group-desc">${def.desc}</div>
+                <div class="group-actions">
+                    <button class="btn btn-primary" ${!isUnlocked ? 'disabled' : ''} onclick="startStudySession(${i})">
+                        Estudiar
+                    </button>
+                    <button class="btn btn-glass" ${!isUnlocked ? 'disabled' : ''} onclick="startExamSession(${i})">
+                        Examen
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        }
+    }
+
+    // ==========================================
+    // 4. MODO ESTUDIO CON BREADCRUMB LINKING
+    // ==========================================
+    let currentGroupIndex = 0;
+    let isCriticalSession = false;
+    let studyQueue = [];
+    let currentWordObj = null;
+    let lastMasteredObj = null;
+
+    function startStudySession(groupIdx) {
+        isCriticalSession = false;
+        currentGroupIndex = groupIdx;
+        studyQueue = [...groups[groupIdx]];
+        lastMasteredObj = null;
+        switchTab('study');
+        renderStudyCard();
+    }
+
+    function startCriticalStudy() {
+        if (criticalWords.length === 0) return;
+        isCriticalSession = true;
+        studyQueue = [...criticalWords];
+        lastMasteredObj = null;
+        switchTab('study');
+        renderStudyCard();
+    }
+
+    function renderStudyCard() {
+        if (studyQueue.length === 0) {
+            alert(isCriticalSession ? "Has completado todas las palabras del Banco Crítico." : "Cadena completada exitosamente.");
+            switchTab('dashboard');
+            return;
+        }
+
+        currentWordObj = studyQueue[0];
+        const nextWordObj = studyQueue.length > 1 ? studyQueue[1] : null;
+
+        // Actualizar barra de enlace Linking
+        document.getElementById('crumb-prev').innerText = lastMasteredObj ? lastMasteredObj.en : "Inicio";
+        document.getElementById('crumb-curr').innerText = currentWordObj.en;
+        document.getElementById('crumb-next').innerText = nextWordObj ? nextWordObj.en : "Fin";
+
+        document.getElementById('study-card-inner').classList.remove('flipped');
+        document.getElementById('word-display-en').innerText = currentWordObj.en;
+        document.getElementById('word-display-es').innerText = currentWordObj.es;
+        document.getElementById('study-remaining-badge').innerText = studyQueue.length;
+
+        const input = document.getElementById('spell-input');
+        input.value = '';
+        input.className = 'ios-input';
+
+        setTimeout(() => playCurrentAudio(), 160);
+    }
+
+    function toggleCardFlip() {
+        document.getElementById('study-card-inner').classList.toggle('flipped');
+    }
+
+    function playCurrentAudio() {
+        if ('speechSynthesis' in window && currentWordObj) {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(currentWordObj.en);
+            utter.lang = 'en-US';
+            utter.rate = 0.86;
+            window.speechSynthesis.speak(utter);
+        }
+    }
+
+    function handleSpellInput(e) {
+        if (e.key === 'Enter') checkSpellingNow();
+    }
+
+    function checkSpellingNow() {
+        const input = document.getElementById('spell-input');
+        const typed = input.value.trim().toLowerCase();
+        const expected = currentWordObj.en.toLowerCase();
+
+        if (typed === expected) {
+            input.className = 'ios-input correct';
+            playCurrentAudio();
+            document.getElementById('study-card-inner').classList.add('flipped');
+        } else {
+            input.className = 'ios-input wrong';
+        }
+    }
+
+    function markHardWord() {
+        const item = studyQueue.shift();
+        studyQueue.push(item);
+
+        addCriticalWord(item);
+
+        if (!wordStats[item.en]) {
+            wordStats[item.en] = { mastered: false, knownDirectly: false, reviewed: true };
+        } else {
+            wordStats[item.en].reviewed = true;
+        }
+        localStorage.setItem('vocabWordStats', JSON.stringify(wordStats));
+        updateMetricsUI();
+
+        renderStudyCard();
+    }
+
+    function markMasteredWord() {
+        const item = studyQueue.shift();
+        lastMasteredObj = item;
+
+        if (isCriticalSession) {
+            removeCriticalWord(item.en);
+        }
+
+        if (!wordStats[item.en]) {
+            wordStats[item.en] = { mastered: true, knownDirectly: true, reviewed: false };
+        } else {
+            wordStats[item.en].mastered = true;
+        }
+        localStorage.setItem('vocabWordStats', JSON.stringify(wordStats));
+        updateMetricsUI();
+
+        renderStudyCard();
+    }
+
+    // ==========================================
+    // 5. EXAMEN BIDIRECCIONAL (15 PREGUNTAS)
+    // ==========================================
+    let examItems = [];
+    let examStepIndex = 0;
+    let examScoreCount = 0;
+
+    function startExamSession(groupIdx) {
+        currentGroupIndex = groupIdx;
+        examStepIndex = 0;
+        examScoreCount = 0;
+
+        const pool = [...groups[groupIdx]].sort(() => 0.5 - Math.random());
+        examItems = pool.slice(0, 15).map((item, idx) => {
+            const isEnToEs = (idx % 2 === 0);
+
+            if (isEnToEs) {
+                const distractors = [...groups[groupIdx]]
+                    .filter(w => w.es !== item.es)
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, 3)
+                    .map(w => w.es);
+                const options = [item.es, ...distractors].sort(() => 0.5 - Math.random());
+                return {
+                    directionText: 'Inglés ➔ Español',
+                    stem: `¿Qué significa: "${item.en}"?`,
+                    correct: item.es,
+                    options,
+                    raw: item
+                };
+            } else {
+                const distractors = [...groups[groupIdx]]
+                    .filter(w => w.en !== item.en)
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, 3)
+                    .map(w => w.en);
+                const options = [item.en, ...distractors].sort(() => 0.5 - Math.random());
+                return {
+                    directionText: 'Español ➔ Inglés',
+                    stem: `¿Cómo se dice: "${item.es}"?`,
+                    correct: item.en,
+                    options,
+                    raw: item
+                };
+            }
+        });
+
+        switchTab('exam');
+        renderExamStep();
+    }
+
+    function renderExamStep() {
+        const q = examItems[examStepIndex];
+
+        document.getElementById('exam-counter-text').innerText = `${examStepIndex + 1} de ${examItems.length}`;
+        const pct = (examStepIndex / examItems.length) * 100;
+        document.getElementById('exam-bar-fill').style.width = `${pct}%`;
+
+        document.getElementById('exam-dir-badge').innerText = q.directionText;
+        document.getElementById('exam-q-stem').innerText = q.stem;
+
+        const stack = document.getElementById('exam-opt-stack');
+        stack.innerHTML = '';
+
+        q.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-item';
+            btn.innerText = opt;
+            btn.onclick = () => selectExamOption(btn, opt, q);
+            stack.appendChild(btn);
+        });
+    }
+
+    function selectExamOption(btn, selected, qData) {
+        const all = document.querySelectorAll('.opt-item');
+        all.forEach(b => b.disabled = true);
+
+        if (selected === qData.correct) {
+            btn.classList.add('correct');
+            examScoreCount++;
+        } else {
+            btn.classList.add('wrong');
+            all.forEach(b => {
+                if (b.innerText === qData.correct) b.classList.add('correct');
+            });
+            // Va directo al banco crítico
+            addCriticalWord(qData.raw);
+        }
+
+        setTimeout(() => {
+            examStepIndex++;
+            if (examStepIndex < examItems.length) {
+                renderExamStep();
+            } else {
+                finishExamScreen();
+            }
+        }, 850);
+    }
+
+    function finishExamScreen() {
+        switchTab('results');
+        const score = Math.round((examScoreCount / examItems.length) * 100);
+
+        const heading = document.getElementById('res-heading');
+        const scoreBadge = document.getElementById('res-score-badge');
+        const summary = document.getElementById('res-summary-text');
+
+        scoreBadge.innerText = `${score}%`;
+
+        if (score >= 80) {
+            heading.innerText = "¡Cadena Aprobada!";
+            scoreBadge.style.color = "var(--accent-emerald)";
+            summary.innerText = `Aciertos: ${examScoreCount} de ${examItems.length}. Has superado el requisito del 80% y desbloqueado el siguiente nivel.`;
+
+            if (currentGroupIndex + 1 === progress.unlocked && progress.unlocked < 10) {
+                progress.unlocked++;
+                localStorage.setItem('englishProgress', JSON.stringify(progress));
+                renderDashboardCards();
+            }
+        } else {
+            heading.innerText = "Refuerzo Requerido";
+            scoreBadge.style.color = "var(--accent-pink)";
+            summary.innerText = `Aciertos: ${examScoreCount} de ${examItems.length}. Se requiere un 80% mínimo. Las palabras falladas se han añadido a tu Banco Crítico.`;
+        }
+    }
+
+    // Inicialización
+    renderDashboardCards();
+    updateMetricsUI();
+</script>
+</body>
+</html>
